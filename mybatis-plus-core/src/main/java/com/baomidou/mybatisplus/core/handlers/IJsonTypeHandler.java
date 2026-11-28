@@ -17,6 +17,8 @@ package com.baomidou.mybatisplus.core.handlers;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 
+import java.lang.reflect.Type;
+
 /**
  * Json类型处理器接口(实现类确保为多例状态).
  * <p>
@@ -35,6 +37,14 @@ import com.baomidou.mybatisplus.annotation.TableName;
  * @since 3.5.6
  */
 public interface IJsonTypeHandler<T> {
+
+    /**
+     * 设置继承字段在具体结果类型中的泛型类型，供反序列化时使用。
+     *
+     * @param fieldType 已解析的字段类型
+     */
+    default void setFieldType(Type fieldType) {
+    }
 
     /**
      * 反序列化json

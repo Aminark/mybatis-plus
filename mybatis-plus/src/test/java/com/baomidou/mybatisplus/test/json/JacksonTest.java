@@ -9,7 +9,12 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.baomidou.mybatisplus.test.DbTestSupport;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +42,7 @@ public class JacksonTest extends DbTestSupport<JacksonTest.JackJsonEntityMapper>
                     attr2 VARCHAR(255) NULL DEFAULT NULL,
                     attr3 VARCHAR(255) NULL DEFAULT NULL,
                     attr4 VARCHAR(255) NULL DEFAULT NULL,
+                    history VARCHAR(255),
                     PRIMARY KEY (id)
                 )
                 """);
@@ -65,7 +71,32 @@ public class JacksonTest extends DbTestSupport<JacksonTest.JackJsonEntityMapper>
 
     }
 
+    @Test
+    void readsJsonElementsDeclaredInAGenericParent() {
+        var attr = new JackJsonEntity.Attr("status", "delivered");
+        doTest(mapper -> {
+            var entity = new JackJsonEntity();
+            entity.setId("history");
+            entity.setHistory(List.of(attr));
+            mapper.insert(entity);
+            assertThat(mapper.selectById("history").getHistory()).containsExactly(attr);
+            assertThat(mapper.readHistory("history").getHistory()).containsExactly(attr);
+        });
+    }
+
     public interface JackJsonEntityMapper extends BaseMapper<JackJsonEntity> {
+
+        @Select("SELECT history FROM t_jackson_entity WHERE id = #{id}")
+        @Results(@Result(column = "history", property = "history", typeHandler = JacksonTypeHandler.class))
+        JackJsonEntity readHistory(String id);
+    }
+
+    @Getter
+    @Setter
+    public static class History<T> {
+
+        @TableField(typeHandler = JacksonTypeHandler.class)
+        private List<T> history;
 
     }
 
@@ -73,7 +104,7 @@ public class JacksonTest extends DbTestSupport<JacksonTest.JackJsonEntityMapper>
     @NoArgsConstructor
     @AllArgsConstructor
     @TableName(value = "t_jackson_entity", autoResultMap = true)
-    public static class JackJsonEntity {
+    public static class JackJsonEntity extends History<JackJsonEntity.Attr> {
 
         @TableId(type = IdType.INPUT)
         private String id;

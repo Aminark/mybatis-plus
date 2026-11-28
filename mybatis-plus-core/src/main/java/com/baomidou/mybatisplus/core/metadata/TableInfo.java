@@ -516,7 +516,7 @@ public class TableInfo implements Constants {
                 resultMappings.add(idMapping);
             }
             if (CollectionUtils.isNotEmpty(fieldList)) {
-                fieldList.forEach(i -> resultMappings.add(i.getResultMapping(configuration)));
+                fieldList.forEach(i -> resultMappings.add(i.getResultMapping(configuration, entityType)));
             }
             ResultMap resultMap = new ResultMap.Builder(configuration, id, entityType, resultMappings).build();
             configuration.addResultMap(resultMap);

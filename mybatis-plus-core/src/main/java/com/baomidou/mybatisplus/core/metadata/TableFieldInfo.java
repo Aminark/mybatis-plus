@@ -573,9 +573,10 @@ public class TableFieldInfo implements Constants {
      * 获取 ResultMapping
      *
      * @param configuration MybatisConfiguration
+     * @param entityType 映射的实体类型
      * @return ResultMapping
      */
-    ResultMapping getResultMapping(final Configuration configuration) {
+    ResultMapping getResultMapping(final Configuration configuration, Class<?> entityType) {
         ResultMapping.Builder builder = new ResultMapping.Builder(configuration, this.property,
                 StringUtils.getTargetColumn(this.column), this.propertyType);
         TypeHandlerRegistry registry = configuration.getTypeHandlerRegistry();
@@ -586,7 +587,8 @@ public class TableFieldInfo implements Constants {
             TypeHandler<?> typeHandler = registry.getMappingTypeHandler(this.typeHandler);
             if (IJsonTypeHandler.class.isAssignableFrom(this.typeHandler)) {
                 // 保证每次实例化
-                typeHandler = MybatisUtils.newJsonTypeHandler(this.typeHandler, this.propertyType, this.field);
+                typeHandler = MybatisUtils
+                        .newJsonTypeHandler(this.typeHandler, this.propertyType, this.field, entityType);
             } else {
                 if (typeHandler == null) {
                     typeHandler = registry.getInstance(this.propertyType, this.typeHandler);

@@ -25,6 +25,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
+import org.apache.ibatis.reflection.TypeParameterResolver;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -34,6 +35,7 @@ import org.apache.ibatis.type.TypeHandler;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.function.Supplier;
 
 /**
@@ -56,7 +58,7 @@ public class MybatisUtils {
             while (currentResultType != null && !Object.class.equals(currentResultType)) {
                 try {
                     Field field = currentResultType.getDeclaredField(property);
-                    typeHandlerInstance = newJsonTypeHandler(typeHandler, javaTypeClass, field);
+                    typeHandlerInstance = newJsonTypeHandler(typeHandler, javaTypeClass, field, resultType);
                     break;
                 } catch (NoSuchFieldException e) {
                     currentResultType = currentResultType.getSuperclass();
@@ -83,6 +85,12 @@ public class MybatisUtils {
      */
     public static TypeHandler<?> newJsonTypeHandler(Class<? extends TypeHandler<?>> typeHandler, Class<?> javaTypeClass,
             Field field) {
+        return newJsonTypeHandler(typeHandler, javaTypeClass, field, null);
+    }
+
+    /** 根据结果类的类型参数解析继承的 JSON 字段。 */
+    public static TypeHandler<?> newJsonTypeHandler(Class<? extends TypeHandler<?>> typeHandler, Class<?> javaTypeClass,
+            Field field, Class<?> resultType) {
         TypeHandler<?> result = null;
         if (IJsonTypeHandler.class.isAssignableFrom(typeHandler)) {
             if (field != null) {
@@ -98,6 +106,13 @@ public class MybatisUtils {
                 } catch (ReflectiveOperationException ex) {
                     throw new TypeException("Failed invoking constructor for handler " + typeHandler, ex);
                 }
+            }
+        }
+        if (result instanceof IJsonTypeHandler && resultType != null && field != null
+                && field.getDeclaringClass() != resultType) {
+            Type resolved = TypeParameterResolver.resolveFieldType(field, resultType);
+            if (!field.getGenericType().equals(resolved)) {
+                ((IJsonTypeHandler<?>) result).setFieldType(resolved);
             }
         }
         return result;

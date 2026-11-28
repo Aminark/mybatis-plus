@@ -97,4 +97,9 @@ public abstract class AbstractJsonTypeHandler<T> extends BaseTypeHandler<T> impl
         return this.genericType != null ? this.genericType : this.type;
     }
 
+    @Override
+    public void setFieldType(Type fieldType) {
+        this.genericType = fieldType;
+    }
+
 }
