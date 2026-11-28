@@ -281,6 +281,9 @@ public class DatabaseMetaDataWrapper {
 
         private final int ordinalPosition;
 
+        /** 索引覆盖的行条件，由 JDBC 驱动提供。 */
+        private final String filterCondition;
+
         public Index(ResultSet resultSet) throws SQLException {
             this.unique = !resultSet.getBoolean("NON_UNIQUE");
             this.name = resultSet.getString("INDEX_NAME");
@@ -288,6 +291,7 @@ public class DatabaseMetaDataWrapper {
             this.ascOrDesc = resultSet.getString("ASC_OR_DESC");
             this.cardinality = resultSet.getInt("CARDINALITY");
             this.ordinalPosition = resultSet.getInt("ORDINAL_POSITION");
+            this.filterCondition = resultSet.getString("FILTER_CONDITION");
         }
 
     }

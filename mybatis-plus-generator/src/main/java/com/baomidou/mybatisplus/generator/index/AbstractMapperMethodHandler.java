@@ -15,6 +15,7 @@
  */
 package com.baomidou.mybatisplus.generator.index;
 
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.generator.IGenerateMapperMethodHandler;
 import com.baomidou.mybatisplus.generator.config.ConstVal;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
@@ -33,10 +34,11 @@ public abstract class AbstractMapperMethodHandler implements IGenerateMapperMeth
     protected Map<String, List<Index>> getMappedIndexes(TableInfo tableInfo) {
         Map<String, List<Index>> indexes = tableInfo.getIndexList().stream()
                 .collect(Collectors.groupingBy(Index::getName));
-        // 复合索引必须保留全部键列，否则按部分条件生成的更新和删除方法会影响其他记录。
+        // 生成的方法只按索引列匹配，不能丢失索引的行条件或复合索引中的任何一列。
         indexes.values().removeIf(
-                parts -> parts.stream()
-                        .anyMatch(part -> !tableInfo.getTableFieldMap().containsKey(part.getColumnName())));
+                parts -> parts.stream().anyMatch(
+                        part -> StringUtils.isNotBlank(part.getFilterCondition())
+                                || !tableInfo.getTableFieldMap().containsKey(part.getColumnName())));
         return indexes;
     }
 
