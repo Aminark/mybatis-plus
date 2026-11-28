@@ -194,6 +194,16 @@ class PaginationInnerInterceptorSqlTest {
                 "SELECT COUNT(*) AS total FROM events AS e FINAL WHERE e.status = ?");
     }
 
+    @Test
+    void countsMatchingRowsWithoutThePageQueryRowLock() {
+        assertCountSql(
+                "SELECT id FROM work_item WHERE status = ? ORDER BY id FOR UPDATE SKIP LOCKED",
+                "SELECT COUNT(*) AS total FROM work_item WHERE status = ?");
+        assertCountSql(
+                "SELECT id FROM work_item WHERE status = ? FOR UPDATE OF work_item NOWAIT",
+                "SELECT COUNT(*) AS total FROM work_item WHERE status = ?");
+    }
+
     private void assertCountSql(String sql, String targetSql) {
         assertThat(interceptor.autoCountSql(new Page<>(), sql)).isEqualTo(targetSql);
     }

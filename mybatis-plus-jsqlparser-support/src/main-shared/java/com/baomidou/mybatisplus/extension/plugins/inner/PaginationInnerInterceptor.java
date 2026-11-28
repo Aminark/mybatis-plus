@@ -276,6 +276,9 @@ public class PaginationInnerInterceptor implements InnerInterceptor {
             }
             PlainSelect plainSelect = (PlainSelect) select;
 
+            // 统计查询只读取匹配行，行锁留给实际取数的查询。
+            plainSelect.setForMode(null);
+
             // 优化 order by 在非分组情况下
             List<OrderByElement> orderBy = plainSelect.getOrderByElements();
             if (CollectionUtils.isNotEmpty(orderBy)) {
